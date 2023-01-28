@@ -2,23 +2,45 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <iomanip>
 #include <vector>
 #include <cmath>
 #include <limits>
 #include <queue>
 #include <deque>
+#include <fstream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/xfeatures2d/nonfree.hpp>
-
 #include "dataStructures.h"
 #include "matching2D.hpp"
 
 using namespace std;
+void write_csv(std::string filename, std::string colname, std::vector<int> vals){
+    // Make a CSV file with one column of integer values
+    // filename - the name of the file
+    // colname - the name of the one and only column
+    // vals - an integer vector of values
+    
+    // Create an output filestream object
+    std::ofstream myFile(filename);
+    
+    // Send the column name to the stream
+    myFile << colname << "\n";
+    
+    // Send data to the stream
+    for(int i = 0; i < vals.size(); ++i)
+    {
+        myFile << vals.at(i) << "\n";
+    }
+    
+    // Close the file
+    myFile.close();
+}
 
 // fixed sized buffer template
 // will pop front if buffer is full and append a new image into the tail or end queue implementation
@@ -28,7 +50,7 @@ class FixedSizeQueue : public std::queue<T, Container> {
 public:
     void push(const T& value) {
         if (this->size() == MaxLen) {
-           this->c.pop_front();
+           this->c.pop_front(); 
         }
         std::queue<T, Container>::push(value);
     }
@@ -39,7 +61,7 @@ int main(int argc, const char *argv[])
 {
 
     /* INIT VARIABLES AND DATA STRUCTURES */
-
+     std::ofstream myFile("MidTerm.csv");
     // data location
     string dataPath = "../";
 
@@ -83,7 +105,7 @@ int main(int argc, const char *argv[])
         //dataBuffer.push_back(frame);
 
         //// EOF STUDENT ASSIGNMENT
-        cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
+        cout << "#1 : LOAD IMAGE INTO BUFFER done" << "Image Index :"<< imgIndex <<endl;
 
         /* DETECT IMAGE KEYPOINTS */
 
@@ -101,34 +123,34 @@ int main(int argc, const char *argv[])
         }
         else if(detectorType.compare("HARRIS") == 0)
         {
-            detKeypointsHarris(keypoints, imgGray, false);
+            detKeypointsHarris(keypoints, imgGray, true);
       
         }
         else if(detectorType.compare("FAST") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "FAST",false);
+            detKeypointsModern(keypoints, imgGray, "FAST",true);
         }
         else if(detectorType.compare("BRISK") == 0)
         {
-            detKeypointsModern(keypoints, imgGray,"BRISK", false);
+            detKeypointsModern(keypoints, imgGray,"BRISK", true);
         }
         else if(detectorType.compare("ORB") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "ORB", false);
+            detKeypointsModern(keypoints, imgGray, "ORB", true);
         }
         else if(detectorType.compare("AKAZE") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "AKAZE", false);
+            detKeypointsModern(keypoints, imgGray, "AKAZE", true);
         }
         else if(detectorType.compare("SIFT") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "SIFT", false);
+            detKeypointsModern(keypoints, imgGray, "SIFT", true);
         }
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
-
+        cout << "#2 : DETECT KEYPOINTS before ROI done... Size:"<< keypoints.size() << endl;
         // only keep keypoints on the preceding vehicle
         bool bFocusOnVehicle = true;
         cv::Rect vehicleRect(535, 180, 180, 150);
@@ -142,16 +164,14 @@ int main(int argc, const char *argv[])
                 {
                     keypointsPreceding.push_back(key);
                 }
-                
             }
             keypoints = keypointsPreceding;
-            // ...
         }
 
         //// EOF STUDENT ASSIGNMENT
 
         // optional : limit number of keypoints (helpful for debugging and learning)
-        bool bLimitKpts = true;
+        bool bLimitKpts = false;
         if (bLimitKpts)
         {
             int maxKeypoints = 50;
@@ -167,14 +187,13 @@ int main(int argc, const char *argv[])
         // push keypoints and descriptor for current frame to end of data buffer
         //(dataBuffer.end() - 1)->keypoints = keypoints;
         ring_buffer.back().keypoints = keypoints;
-        cout << "#2 : DETECT KEYPOINTS done" << endl;
-
+        cout << "#2 : DETECT KEYPOINTS after ROI done... Size:"<< ring_buffer.back().keypoints.size() << endl;
+    
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
-
         cv::Mat descriptors;
         string descriptorType = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
         descKeypoints(ring_buffer.back().keypoints, ring_buffer.back().cameraImg, descriptors, descriptorType);
@@ -183,7 +202,7 @@ int main(int argc, const char *argv[])
         // push descriptors for current frame to end of data buffer
         //(dataBuffer.end() - 1)->descriptors = descriptors;
         ring_buffer.back().descriptors = descriptors;
-        cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
+        cout << "#3 : EXTRACT DESCRIPTORS done... "<< endl;
 
         if (ring_buffer.size() > 1) // wait until at least two images have been processed
         {
@@ -192,7 +211,7 @@ int main(int argc, const char *argv[])
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
             string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+            string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
             //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
@@ -207,26 +226,27 @@ int main(int argc, const char *argv[])
             // store matches in current data frame
             //(dataBuffer.end() - 1)->kptMatches = matches;
             ring_buffer.back().kptMatches = matches;
-            cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
+            cout << "#4 : MATCH KEYPOINT DESCRIPTORS done / Size of Matches: " << (int)ring_buffer.back().kptMatches.size() << endl;
 
             // visualize matches between current and previous image
             bVis = true;
             if (bVis)
             {
                 cv::Mat matchImg = (ring_buffer.back().cameraImg).clone();
-                cv::drawMatches(ring_buffer.front().cameraImg, ring_buffer.front().keypoints,
-                                ring_buffer.back().cameraImg, ring_buffer.back().keypoints,
-                                matches, matchImg,
+                cv::drawMatches(ring_buffer.back().cameraImg, ring_buffer.back().keypoints,
+                                ring_buffer.front().cameraImg, ring_buffer.front().keypoints,
+                                ring_buffer.back().kptMatches , matchImg,
                                 cv::Scalar::all(-1), cv::Scalar::all(-1),
                                 vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
                 string windowName = "Matching keypoints between two camera images";
-                cv::namedWindow(windowName, 7);
+                cv::namedWindow(windowName, 10);
                 cv::imshow(windowName, matchImg);
                 cout << "Press key to continue to next image" << endl;
                 cv::waitKey(0); // wait for key to be pressed
             }
             bVis = false;
+            cout << "---------------------------------------------------------------------------------------" << endl;
         }
 
     } // eof loop over all images
