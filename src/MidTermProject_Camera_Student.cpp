@@ -20,27 +20,6 @@
 #include "matching2D.hpp"
 
 using namespace std;
-void write_csv(std::string filename, std::string colname, std::vector<int> vals){
-    // Make a CSV file with one column of integer values
-    // filename - the name of the file
-    // colname - the name of the one and only column
-    // vals - an integer vector of values
-    
-    // Create an output filestream object
-    std::ofstream myFile(filename);
-    
-    // Send the column name to the stream
-    myFile << colname << "\n";
-    
-    // Send data to the stream
-    for(int i = 0; i < vals.size(); ++i)
-    {
-        myFile << vals.at(i) << "\n";
-    }
-    
-    // Close the file
-    myFile.close();
-}
 
 // fixed sized buffer template
 // will pop front if buffer is full and append a new image into the tail or end queue implementation
@@ -60,8 +39,6 @@ public:
 int main(int argc, const char *argv[])
 {
 
-    /* INIT VARIABLES AND DATA STRUCTURES */
-     std::ofstream myFile("MidTerm.csv");
     // data location
     string dataPath = "../";
 
@@ -81,7 +58,13 @@ int main(int argc, const char *argv[])
     // Initializing ring buffer
     FixedSizeQueue<DataFrame,2> ring_buffer;
     /* MAIN LOOP OVER ALL IMAGES */
-
+    std::vector<float> Keypointbefore;
+    std::vector<float> KeypointAfter;
+    std::vector<float> DescriptorMatches;
+    std::vector<float> KeypointTime;
+    std::vector<float> MatchingTime;
+    float KeypointTime_ = 0.0;
+    float MatchingTime_ = 0.0;
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -119,38 +102,40 @@ int main(int argc, const char *argv[])
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
+            detKeypointsShiTomasi(keypoints, imgGray, false,KeypointTime_);
         }
         else if(detectorType.compare("HARRIS") == 0)
         {
-            detKeypointsHarris(keypoints, imgGray, true);
+            detKeypointsHarris(keypoints, imgGray, true,KeypointTime_);
       
         }
         else if(detectorType.compare("FAST") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "FAST",true);
+            detKeypointsModern(keypoints, imgGray, "FAST",true,KeypointTime_);
         }
         else if(detectorType.compare("BRISK") == 0)
         {
-            detKeypointsModern(keypoints, imgGray,"BRISK", true);
+            detKeypointsModern(keypoints, imgGray,"BRISK", true,KeypointTime_);
         }
         else if(detectorType.compare("ORB") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "ORB", true);
+            detKeypointsModern(keypoints, imgGray, "ORB", true,KeypointTime_);
         }
         else if(detectorType.compare("AKAZE") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "AKAZE", true);
+            detKeypointsModern(keypoints, imgGray, "AKAZE", true,KeypointTime_);
         }
         else if(detectorType.compare("SIFT") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "SIFT", true);
+            detKeypointsModern(keypoints, imgGray, "SIFT", true,KeypointTime_);
         }
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.3 -> only keep keypoints on the preceding vehicle
         cout << "#2 : DETECT KEYPOINTS before ROI done... Size:"<< keypoints.size() << endl;
+        KeypointTime.push_back(KeypointTime_);
+        Keypointbefore.push_back(keypoints.size());
         // only keep keypoints on the preceding vehicle
         bool bFocusOnVehicle = true;
         cv::Rect vehicleRect(535, 180, 180, 150);
@@ -187,6 +172,7 @@ int main(int argc, const char *argv[])
         // push keypoints and descriptor for current frame to end of data buffer
         //(dataBuffer.end() - 1)->keypoints = keypoints;
         ring_buffer.back().keypoints = keypoints;
+        KeypointAfter.push_back(keypoints.size());
         cout << "#2 : DETECT KEYPOINTS after ROI done... Size:"<< ring_buffer.back().keypoints.size() << endl;
     
         /* EXTRACT KEYPOINT DESCRIPTORS */
@@ -219,15 +205,16 @@ int main(int argc, const char *argv[])
 
             matchDescriptors(ring_buffer.back().keypoints, ring_buffer.front().keypoints,
                              ring_buffer.back().descriptors, ring_buffer.front().descriptors,
-                             matches, descriptorType, matcherType, selectorType);
+                             matches, descriptorType, matcherType, selectorType,MatchingTime_);
 
             //// EOF STUDENT ASSIGNMENT
 
             // store matches in current data frame
             //(dataBuffer.end() - 1)->kptMatches = matches;
             ring_buffer.back().kptMatches = matches;
+            
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done / Size of Matches: " << (int)ring_buffer.back().kptMatches.size() << endl;
-
+            
             // visualize matches between current and previous image
             bVis = true;
             if (bVis)
@@ -245,11 +232,18 @@ int main(int argc, const char *argv[])
                 cout << "Press key to continue to next image" << endl;
                 cv::waitKey(0); // wait for key to be pressed
             }
+            
             bVis = false;
             cout << "---------------------------------------------------------------------------------------" << endl;
         }
+        MatchingTime.push_back(MatchingTime_);
+        DescriptorMatches.push_back((int)ring_buffer.back().kptMatches.size());
 
     } // eof loop over all images
-
+            cout << Keypointbefore.size() << KeypointAfter.size() << DescriptorMatches.size() << KeypointTime.size()<< MatchingTime.size()<<endl;
+            std::vector<std::pair<std::string, std::vector<float>>> vals= {{"Keypointbefore", Keypointbefore}, {"KeypointAfter", KeypointAfter}, {"DescriptorMatches", DescriptorMatches}, {"KeypointTime", KeypointTime}, {"MatchingTime", MatchingTime}};
+            // Write the vector to CSV
+            write_csv("MidTerm.csv", vals);
+        
     return 0;
 }
