@@ -18,6 +18,8 @@
 #include <opencv2/xfeatures2d/nonfree.hpp>
 #include "dataStructures.h"
 #include "matching2D.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -65,6 +67,13 @@ int main(int argc, const char *argv[])
     std::vector<float> MatchingTime;
     float KeypointTime_ = 0.0;
     float MatchingTime_ = 0.0;
+    char path[12] = "AKAZE_FREAK";
+    string path_dir = "";
+    int k;
+    for (k = 0; k < 11; k++) {
+        path_dir = path_dir + path[k];
+    }
+    mkdir(path,0700);
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -94,7 +103,7 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "HARRIS";
+        string detectorType = "AKAZE";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
@@ -102,32 +111,31 @@ int main(int argc, const char *argv[])
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            detKeypointsShiTomasi(keypoints, imgGray, true,KeypointTime_,imgIndex);
+            detKeypointsShiTomasi(keypoints, imgGray, true, KeypointTime_,imgIndex,path_dir);
         }
         else if(detectorType.compare("HARRIS") == 0)
         {
-            detKeypointsHarris(keypoints, imgGray, true,KeypointTime_,imgIndex);
-      
+            detKeypointsHarris(keypoints, imgGray, true, KeypointTime_,imgIndex,path_dir);    
         }
         else if(detectorType.compare("FAST") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "FAST",true,KeypointTime_,imgIndex);
+            detKeypointsModern(keypoints, imgGray, "FAST",true, KeypointTime_,imgIndex,path_dir);
         }
         else if(detectorType.compare("BRISK") == 0)
         {
-            detKeypointsModern(keypoints, imgGray,"BRISK", true,KeypointTime_,imgIndex);
+            detKeypointsModern(keypoints, imgGray,"BRISK", true, KeypointTime_,imgIndex,path_dir);
         }
         else if(detectorType.compare("ORB") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "ORB", true,KeypointTime_,imgIndex);
+            detKeypointsModern(keypoints, imgGray, "ORB", true, KeypointTime_,imgIndex,path_dir);
         }
         else if(detectorType.compare("AKAZE") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "AKAZE", true,KeypointTime_,imgIndex);
+            detKeypointsModern(keypoints, imgGray, "AKAZE", true, KeypointTime_,imgIndex,path_dir);
         }
         else if(detectorType.compare("SIFT") == 0)
         {
-            detKeypointsModern(keypoints, imgGray, "SIFT", true,KeypointTime_,imgIndex);
+            detKeypointsModern(keypoints, imgGray, "SIFT", true, KeypointTime_,imgIndex,path_dir);
         }
         //// EOF STUDENT ASSIGNMENT
 
@@ -181,7 +189,7 @@ int main(int argc, const char *argv[])
         //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
         cv::Mat descriptors;
-        string descriptorType = "SIFT"; // BRIEF, ORB, FREAK, AKAZE, SIFT, BRISK
+        string descriptorType = "FREAK"; // BRIEF, ORB, FREAK, AKAZE, SIFT, BRISK
         descKeypoints(ring_buffer.back().keypoints, ring_buffer.back().cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
@@ -196,7 +204,7 @@ int main(int argc, const char *argv[])
 
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_HOG"; // DES_BINARY, DES_HOG
+            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG (USE HOG FOR SIFT)
             string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
@@ -226,7 +234,7 @@ int main(int argc, const char *argv[])
                                 cv::Scalar::all(-1), cv::Scalar::all(-1),
                                 vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
                 string image_name= "Matcher Image #" + std::to_string((unsigned long)imgIndex)+".jpg";
-                cv::imwrite(image_name,matchImg);
+                cv::imwrite(path_dir+'/'+image_name,matchImg);
                 string windowName = "Matching keypoints between two camera images";
                 cv::namedWindow(windowName, 10);
                 cv::imshow(windowName, matchImg);
@@ -243,7 +251,7 @@ int main(int argc, const char *argv[])
     } // eof loop over all images
             std::vector<std::pair<std::string, std::vector<float>>> vals= {{"Keypointbefore", Keypointbefore}, {"KeypointAfter", KeypointAfter}, {"DescriptorMatches", DescriptorMatches}, {"KeypointTime", KeypointTime}, {"MatchingTime", MatchingTime}};
             // Write the vector to CSV
-            write_csv("SHITOMASI_SIFT.csv", vals);
+            write_csv(path_dir+"/AKAZE_FREAK.csv", vals);
         
     return 0;
 }
