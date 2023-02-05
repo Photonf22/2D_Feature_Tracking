@@ -149,8 +149,8 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     else if(descriptorType.compare("SIFT") == 0)
     {
          t = (double)cv::getTickCount();
-         cv::Ptr<cv::SIFT> extractor;
-        extractor = cv::SIFT::create();
+         cv::Ptr<cv::DescriptorExtractor> extractor;
+         extractor = cv::xfeatures2d::SIFT::Create();
         extractor->compute(img, keypoints, descriptors);
     }
 
@@ -194,58 +194,15 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
     {
         cv::Mat visImage = img.clone();
         cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-        string image_name= "ShiTomasi Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
-        cv::imwrite(path_dir+'/'+image_name,visImage);
+        //string image_name= "ShiTomasi Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
+        //cv::imwrite(path_dir+'/'+image_name,visImage);
         string windowName = "Shi-Tomasi Corner Detector Results";
         cv::namedWindow(windowName, 6);
         imshow(path_dir+'/'+windowName, visImage);
         cv::waitKey(0);
     }
 }
-std::vector<cv::KeyPoint> NMS_Algorithm(cv::Mat CornerHarris_img, int apertureSize, int threshold)
-{
-    // harris response matrix with all maximum pixels
-    double maxOverlap = 0.0; // max. permissible overlap between two features in %, used during non-maxima suppression
-    std::vector<cv::KeyPoint> result;
-    for(int i = 0;i < CornerHarris_img.rows ;i++)
-    {
-        for(int j = 0;j < CornerHarris_img.cols ;j++)
-        {
-            int pixel_intensity = (int)CornerHarris_img.at<float>(i,j);
 
-            if(pixel_intensity > threshold)
-            {
-                cv::KeyPoint new_key;
-                new_key.pt = cv::Point2f(i,j);
-                new_key.size = 2*apertureSize;
-                new_key.response = pixel_intensity;
-            
-            bool added = false;
-            for(std::vector<cv::KeyPoint>::iterator iter= result.begin();iter != result.end();iter++)
-            {  
-                //check if overlap and % of overlap
-                double percentage_overlap = cv::KeyPoint::overlap(new_key, *iter);
-                if(percentage_overlap > maxOverlap)
-                {
-                    added = true;
-                    // check which has more intensity/ response
-                    if(new_key.response > iter->response)
-                    {
-                        *iter = new_key;
-                        break;
-                    }
-                }
-                
-            }
-            if (!added)
-                {                                     // only add new key point if no overlap has been found in previous NMS
-                    result.push_back(new_key); // store new keypoint in dynamic list
-                }
-            }
-        }
-    }
-    return result;
-}
 void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis,float &KeypointTime, int index, string path_dir)
 {
         // Detector parameters
@@ -261,8 +218,6 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
     cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
     cv::convertScaleAbs(dst_norm, dst_norm_scaled);
-    //keypoints = NMS_Algorithm(dst_norm_scaled,apertureSize,minResponse);
-    //cout<< "found Size of Detectors Harris:"<< keypoints.size() <<endl;
     KeypointTime= 1000 * t / 1.0;
 
     // NMS  Algorithmn
@@ -312,8 +267,8 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
         cv::namedWindow(windowName, 6);
         cv::Mat visImage = img.clone();
         cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-        string image_name= "Harris Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
-        cv::imwrite(path_dir+'/'+image_name,visImage);
+        //string image_name= "Harris Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
+        //cv::imwrite(path_dir+'/'+image_name,visImage);
         cv::imshow(windowName, visImage);
         cv::waitKey(0);
     }
@@ -370,7 +325,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     }
     else if(detectorType.compare("SIFT") == 0)
     {
-        cv::Ptr<cv::FeatureDetector> type_SIFT = cv::SIFT::create();
+        cv::Ptr<cv::FeatureDetector> type_SIFT = cv::xfeatures2d::SIFT::create();
         double t = (double)cv::getTickCount();
         type_SIFT->detect(img, keypoints);
         t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
@@ -388,8 +343,8 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
         cv::drawKeypoints(img, keypoints, visImage, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
         string windowName = detectorType + " Detector Results";
         cv::namedWindow(windowName, 6);
-        string image_name= detectorType+" Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
-        cv::imwrite(path_dir+'/'+image_name,visImage);
+        //string image_name= detectorType+" Detector: Image#" + std::to_string((unsigned long)index)+".jpg";
+        //cv::imwrite(path_dir+'/'+image_name,visImage);
         imshow(windowName, visImage);
         cv::waitKey(0);
     }

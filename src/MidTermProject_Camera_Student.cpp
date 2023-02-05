@@ -67,13 +67,13 @@ int main(int argc, const char *argv[])
     std::vector<float> MatchingTime;
     float KeypointTime_ = 0.0;
     float MatchingTime_ = 0.0;
-    char path[16] = "SHITOMASI_FREAK";
+    //char path[16] = "SHITOMASI_FREAK";
     string path_dir = "";
-    int k;
-    for (k = 0; k < 15; k++) {
-        path_dir = path_dir + path[k];
-    }
-    mkdir(path,0700);
+    //int k;
+    //for (k = 0; k < 15; k++) {
+    //    path_dir = path_dir + path[k];
+    //}
+    //mkdir(path,0700);
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
     {
         /* LOAD IMAGE INTO BUFFER */
@@ -233,8 +233,8 @@ int main(int argc, const char *argv[])
                                 ring_buffer.back().kptMatches , matchImg,
                                 cv::Scalar::all(-1), cv::Scalar::all(-1),
                                 vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-                string image_name= "Matcher Image #" + std::to_string((unsigned long)imgIndex)+".jpg";
-                cv::imwrite(path_dir+'/'+image_name,matchImg);
+                //string image_name= "Matcher Image #" + std::to_string((unsigned long)imgIndex)+".jpg";
+                //cv::imwrite(path_dir+'/'+image_name,matchImg);
                 string windowName = "Matching keypoints between two camera images";
                 cv::namedWindow(windowName, 10);
                 cv::imshow(windowName, matchImg);
@@ -249,9 +249,9 @@ int main(int argc, const char *argv[])
         DescriptorMatches.push_back((int)ring_buffer.back().kptMatches.size());
 
     } // eof loop over all images
-            std::vector<std::pair<std::string, std::vector<float>>> vals= {{"Keypointbefore", Keypointbefore}, {"KeypointAfter", KeypointAfter}, {"DescriptorMatches", DescriptorMatches}, {"KeypointTime", KeypointTime}, {"MatchingTime", MatchingTime}};
+            //std::vector<std::pair<std::string, std::vector<float>>> vals= {{"Keypointbefore", Keypointbefore}, {"KeypointAfter", KeypointAfter}, {"DescriptorMatches", DescriptorMatches}, {"KeypointTime", KeypointTime}, {"MatchingTime", MatchingTime}};
             // Write the vector to CSV
-            write_csv(path_dir+"/SHITOMASI_FREAK.csv", vals);
+            //write_csv(path_dir+"/SHITOMASI_FREAK.csv", vals);
         
     return 0;
 }
