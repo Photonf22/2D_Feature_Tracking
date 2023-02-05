@@ -150,7 +150,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     {
          t = (double)cv::getTickCount();
          cv::Ptr<cv::DescriptorExtractor> extractor;
-         extractor = cv::xfeatures2d::SIFT::Create();
+         extractor = cv::xfeatures2d::SIFT::create();
         extractor->compute(img, keypoints, descriptors);
     }
 
