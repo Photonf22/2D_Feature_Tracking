@@ -67,10 +67,10 @@ int main(int argc, const char *argv[])
     std::vector<float> MatchingTime;
     float KeypointTime_ = 0.0;
     float MatchingTime_ = 0.0;
-    char path[17] = "SHITOMASI_HARRIS";
+    char path[16] = "SHITOMASI_FREAK";
     string path_dir = "";
     int k;
-    for (k = 0; k < 16; k++) {
+    for (k = 0; k < 15; k++) {
         path_dir = path_dir + path[k];
     }
     mkdir(path,0700);
@@ -189,7 +189,7 @@ int main(int argc, const char *argv[])
         //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
         cv::Mat descriptors;
-        string descriptorType = "HARRIS"; // BRIEF, ORB, FREAK, AKAZE, SIFT, BRISK
+        string descriptorType = "FREAK"; // BRIEF, ORB, FREAK, AKAZE, SIFT, BRISK
         descKeypoints(ring_buffer.back().keypoints, ring_buffer.back().cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
@@ -251,7 +251,7 @@ int main(int argc, const char *argv[])
     } // eof loop over all images
             std::vector<std::pair<std::string, std::vector<float>>> vals= {{"Keypointbefore", Keypointbefore}, {"KeypointAfter", KeypointAfter}, {"DescriptorMatches", DescriptorMatches}, {"KeypointTime", KeypointTime}, {"MatchingTime", MatchingTime}};
             // Write the vector to CSV
-            write_csv(path_dir+"/SHITOMASI_HARRIS.csv", vals);
+            write_csv(path_dir+"/SHITOMASI_FREAK.csv", vals);
         
     return 0;
 }
