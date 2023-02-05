@@ -41,3 +41,19 @@ Then, add *C:\vcpkg\installed\x64-windows\bin* and *C:\vcpkg\installed\x64-windo
 2. Make a build directory in the top level directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./2D_feature_tracking`.
+
+# Overall Tasks MP.7 and MP.8
+
+![image](https://user-images.githubusercontent.com/105236455/216842574-dc517f84-6276-46cc-9272-2d0b12961495.png)
+
+# Overall Average Time
+
+![image](https://user-images.githubusercontent.com/105236455/216842593-691f44c8-f303-41a7-8ede-9876bbd98a2a.png)
+
+# Top 3 Performers
+			
+![image](https://user-images.githubusercontent.com/105236455/216842607-86337f58-3b89-449c-83c8-83834989e4b7.png)
+
+# Notes Task MP.9
+					
+![image](https://user-images.githubusercontent.com/105236455/216842614-058f6337-87d8-460b-bf2d-b5bab949b1cf.png)
